@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inland Attendance Admin</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="https://vvuiqppwjsvuzzfgcykt.supabase.co/storage/v1/object/public/assets/logo.png">
+<style>
+:root {
+  --bg: #f4f6fb; --surface: #ffffff; --surface2: #f8fafc; --ink: #0f172a; --muted: #64748b;
+  --faint: #94a3b8; --line: #e2e8f0; --brand: #1d4ed8; --brand-ink: #ffffff; --navy: #0f172a;
+  --green: #15803d; --green-bg: #dcfce7; --blue: #1d4ed8; --orange: #c2410c; --orange-bg: #ffedd5;
+  --red: #b91c1c; --red-bg: #fee2e2; --purple: #7e22ce; --purple-bg: #f3e8ff; --amber: #b45309;
+  --amber-bg: #fef3c7; --slate-bg: #f1f5f9; --shadow: 0 1px 2px rgba(15,23,42,.06), 0 4px 16px rgba(15,23,42,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1120; --surface: #111827; --surface2: #0f172a; --ink: #e5e7eb; --muted: #94a3b8;
+    --faint: #64748b; --line: #1f2937; --brand: #3b82f6; --navy: #020617;
+    --green: #4ade80; --green-bg: #052e16; --blue: #60a5fa; --orange: #fb923c; --orange-bg: #431407;
+    --red: #f87171; --red-bg: #450a0a; --purple: #c084fc; --purple-bg: #3b0764; --amber: #fbbf24;
+    --amber-bg: #422006; --slate-bg: #1e293b; --shadow: none;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+.hidden { display: none !important; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+h1, h2, h3 { margin: 0; line-height: 1.2; }
+
+/* ---------- login ---------- */
+.login { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; }
+.login .side { background: linear-gradient(135deg, #0f172a, #1e3a8a); color: #fff; padding: 56px; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+.login .side img { width: 96px; height: 96px; background: #fff; border-radius: 22px; padding: 8px; }
+.login .side h1 { font-size: 36px; }
+.login .side p { color: #cbd5e1; max-width: 460px; margin: 0; }
+.login .form { display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+.login .card { width: 100%; max-width: 400px; padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+label.field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+input, select { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-height: 42px; width: 100%; }
+label.field input, label.field select { font-weight: 400; color: var(--ink); }
+input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1px; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 14px; cursor: pointer; font-weight: 600; min-height: 40px; display: inline-flex; align-items: center; gap: 6px; justify-content: center; white-space: nowrap; }
+.btn:hover { background: var(--surface2); }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.danger { color: var(--red); }
+.btn:disabled { opacity: .55; cursor: default; }
+.btn.link { border: 0; background: none; color: var(--brand); padding: 4px; min-height: 0; }
+.error { background: var(--red-bg); color: var(--red); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+.ok { background: var(--green-bg); color: var(--green); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+
+/* ---------- shell ---------- */
+header.top { background: var(--navy); color: #fff; padding: 0 20px; display: flex; align-items: center; gap: 14px; height: 60px; position: sticky; top: 0; z-index: 5; }
+header.top img { width: 36px; height: 36px; background: #fff; border-radius: 9px; padding: 3px; }
+header.top .brand { font-weight: 800; }
+header.top .branch { color: #93c5fd; font-size: 12px; }
+header.top .spacer { flex: 1; }
+header.top .btn { background: transparent; color: #fff; border-color: #334155; }
+nav.tabs { display: flex; gap: 4px; padding: 10px 20px 0; overflow-x: auto; border-bottom: 1px solid var(--line); background: var(--surface); position: sticky; top: 60px; z-index: 4; }
+nav.tabs button { border: 0; background: none; padding: 10px 14px; border-bottom: 3px solid transparent; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; }
+nav.tabs button.on { color: var(--brand); border-bottom-color: var(--brand); }
+main { padding: 20px; max-width: 1400px; margin: 0 auto; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 16px; }
+.toolbar .grow { flex: 1; min-width: 160px; }
+.toolbar label.field { min-width: 140px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: none; padding: 9px 12px; cursor: pointer; font-weight: 600; color: var(--muted); min-height: 40px; }
+.seg button.on { background: var(--brand); color: #fff; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.tile .v { font-size: 20px; white-space: nowrap; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tile .k { font-size: 12px; color: var(--muted); }
+.v.green { color: var(--green); } .v.blue { color: var(--blue); } .v.orange { color: var(--orange); }
+.v.purple { color: var(--purple); } .v.red { color: var(--red); } .v.amber { color: var(--amber); }
+
+.twocol { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 16px; align-items: start; }
+.twocol > * { min-width: 0; }
+.stafflist { max-height: calc(100vh - 170px); overflow: auto; position: sticky; top: 124px; }
+.stafflist .search { padding: 10px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
+.person { display: flex; gap: 10px; align-items: center; padding: 9px 12px; cursor: pointer; border-bottom: 1px solid var(--line); }
+.person:hover { background: var(--surface2); }
+.person.on { background: color-mix(in srgb, var(--brand) 12%, transparent); }
+.person.off { opacity: .5; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 13px; flex: none; }
+.person .nm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.person .cd { font-size: 12px; color: var(--muted); }
+
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: var(--surface2); padding: 10px 12px; border-bottom: 1px solid var(--line); position: sticky; top: 0; white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr.off td { background: var(--surface2); }
+td .d { font-weight: 700; white-space: nowrap; }
+td .bs { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.t-in { color: var(--green); font-weight: 700; white-space: nowrap; }
+.t-out { color: var(--blue); font-weight: 700; white-space: nowrap; }
+.ot { color: var(--orange); font-weight: 800; }
+.dash { color: var(--faint); }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.p-PRESENT { background: var(--green-bg); color: var(--green); }
+.p-LATE { background: var(--amber-bg); color: var(--amber); }
+.p-HALF_DAY { background: var(--orange-bg); color: var(--orange); }
+.p-INCOMPLETE { background: #e0e7ff; color: #4338ca; }
+.p-ABSENT { background: var(--red-bg); color: var(--red); }
+.p-HOLIDAY { background: #e0f2fe; color: #0369a1; }
+.p-WEEKLY_OFF, .p-LEAVE { background: var(--slate-bg); color: var(--muted); }
+.p-LEAVE { background: var(--purple-bg); color: var(--purple); }
+.p-break { background: var(--purple-bg); color: var(--purple); }
+.p-in { background: var(--green-bg); color: var(--green); }
+@media (prefers-color-scheme: dark) { .p-INCOMPLETE { background: #1e1b4b; color: #a5b4fc; } .p-HOLIDAY { background: #082f49; color: #7dd3fc; } }
+
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.pcard { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.pcard.in { border-color: #86efac; }
+.empty { padding: 40px; text-align: center; color: var(--muted); }
+.loading { padding: 30px; text-align: center; color: var(--muted); }
+
+dialog { border: 1px solid var(--line); border-radius: 16px; padding: 0; background: var(--surface); color: var(--ink); width: min(620px, calc(100vw - 32px)); }
+dialog::backdrop { background: rgba(2,6,23,.55); }
+dialog form { padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.check { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.check input { width: 18px; height: 18px; min-height: 0; }
+.actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+.section { padding: 18px; margin-bottom: 16px; }
+.section h3 { margin-bottom: 12px; font-size: 15px; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; z-index: 50; max-width: calc(100vw - 32px); }
+
+@media (max-width: 860px) {
+  .login { grid-template-columns: 1fr; }
+  .login .side { padding: 28px 16px; }
+  .login .side h1 { font-size: 26px; }
+  .twocol { grid-template-columns: minmax(0, 1fr); }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .toolbar label.field { min-width: 0; flex: 1 1 140px; }
+  .stafflist { position: static; max-height: 260px; }
+  main { padding: 16px; }
+  header.top { padding: 0 16px; }
+  header.top .brand { display: none; }
+  nav.tabs { padding: 8px 16px 0; }
+  .row2, .row3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= LOGIN ======================= -->
+<section id="loginView" class="login hidden">
+  <div class="side">
+    <img src="https://vvuiqppwjsvuzzfgcykt.supabase.co/storage/v1/object/public/assets/logo.png" alt="">
+    <div class="small" style="letter-spacing:2px;color:#93c5fd;font-weight:800">ADMIN PANEL</div>
+    <h1>Inland Attendance</h1>
+    <p>Each branch has its own login. You see only the staff, check-ins, check-outs, break duty and overtime of the branch you log in to. Records older than 2 months are removed automatically.</p>
+  </div>
+  <div class="form">
+    <div class="card" id="loginCard">
+      <h2>Branch login</h2>
+      <label class="field">Branch
+        <select id="branchSel"><option value="">Loading branches...</option></select>
+      </label>
+      <label class="field">Password
+        <input id="pw" type="password" autocomplete="current-password">
+      </label>
+      <div id="loginErr" class="error hidden"></div>
+      <button class="btn primary" id="loginBtn">Log in</button>
+      <button class="btn link" id="showCreate" type="button">Create a new branch</button>
+    </div>
+    <div class="card hidden" id="createCard">
+      <h2>New branch</h2>
+      <p class="muted small" style="margin:0">Creates the branch login. Then open the attendance app on the branch PC and choose this branch.</p>
+      <div class="row2">
+        <label class="field">Branch name<input id="nbName" placeholder="Inland Sitapaila"></label>
+        <label class="field">Short code<input id="nbCode" placeholder="SITAPAILA"></label>
+      </div>
+      <label class="field">Login email<input id="nbEmail" type="email" placeholder="sitapaila@yourcompany.com"></label>
+      <div class="row2">
+        <label class="field">Password (8+)<input id="nbPw" type="password" autocomplete="new-password"></label>
+        <label class="field">Repeat<input id="nbPw2" type="password" autocomplete="new-password"></label>
+      </div>
+      <label class="field">Setup key<input id="nbKey" autocomplete="off"></label>
+      <div id="createErr" class="error hidden"></div>
+      <button class="btn primary" id="createBtn">Create branch</button>
+      <button class="btn link" id="showLogin" type="button">Back to login</button>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= APP ======================= -->
+<section id="appView" class="hidden">
+  <header class="top">
+    <img src="https://vvuiqppwjsvuzzfgcykt.supabase.co/storage/v1/object/public/assets/logo.png" alt="">
+    <div>
+      <div class="brand">Inland Attendance</div>
+      <div class="branch" id="branchName"></div>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="refreshBtn" title="Reload data">Refresh</button>
+    <button class="btn" id="logoutBtn">Log out</button>
+  </header>
+  <nav class="tabs" id="tabs">
+    <button data-tab="today" class="on">Today</button>
+    <button data-tab="staffatt">Staff attendance</button>
+    <button data-tab="records">All records</button>
+    <button data-tab="summary">Summary</button>
+    <button data-tab="staff">Staff</button>
+    <button data-tab="settings">Settings</button>
+  </nav>
+  <main id="main"></main>
+</section>
+
+<dialog id="staffDlg">
+  <form method="dialog" id="staffForm">
+    <h2 id="staffDlgTitle">Add staff</h2>
+    <div class="row2">
+      <label class="field">Full name<input name="name" required></label>
+      <label class="field">Staff ID / code<input name="emp_code" required></label>
+    </div>
+    <div class="row3">
+      <label class="field">Department<input name="department"></label>
+      <label class="field">Designation<input name="designation"></label>
+      <label class="field">Phone<input name="phone"></label>
+    </div>
+    <div class="row2">
+      <label class="field"><span id="pinLabel">PIN (4-8 digits)</span><input name="pin" inputmode="numeric" pattern="[0-9]{4,8}" autocomplete="off"></label>
+      <label class="field">Joined on<input name="joined_date" type="date"></label>
+    </div>
+    <div class="row3">
+      <label class="field">Weekly off
+        <select name="weekly_off">
+          <option value="0">None</option><option value="1">Monday</option><option value="2">Tuesday</option>
+          <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option>
+          <option value="6">Saturday</option><option value="7">Sunday</option>
+        </select>
+      </label>
+      <label class="field">Shift start<input name="shift_start" type="time"></label>
+      <label class="field">Shift end<input name="shift_end" type="time"></label>
+    </div>
+    <div class="row2">
+      <label class="check"><input type="checkbox" name="flexible_shift"> No fixed starting time</label>
+      <label class="field">Late grace (min)<input name="grace_minutes" type="number" min="0" max="240"></label>
+    </div>
+    <label class="check"><input type="checkbox" name="active"> Active (shows on the attendance screen)</label>
+    <div id="staffErr" class="error hidden"></div>
+    <div class="actions">
+      <button class="btn" value="cancel" formnovalidate>Cancel</button>
+      <button class="btn primary" id="staffSave" value="save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPABASE_URL = 'https://vvuiqppwjsvuzzfgcykt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_N8B8lGxunGmY2KKq_C1n5g_nF3FyXM2';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+
+// ------------------------------------------------------------- dates
+const NP_OFFSET = (5 * 60 + 45) * 60000;
+const pad = (n) => String(n).padStart(2, '0');
+function npNow() { return new Date(Date.now() + NP_OFFSET); } // read with getUTC*
+function keyOf(d) { return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; }
+function parseKey(k) { const [y, m, d] = k.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); }
+function addDays(k, n) { const d = parseKey(k); d.setUTCDate(d.getUTCDate() + n); return keyOf(d); }
+function todayKey() { return keyOf(npNow()); }
+const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WDL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function prettyKey(k) { const d = parseKey(k); return `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}`; }
+function t12(iso) {
+  if (!iso) return '--';
+  const h = Number(iso.slice(11, 13)), m = iso.slice(14, 16);
+  return `${h % 12 === 0 ? 12 : h % 12}:${m} ${h < 12 ? 'AM' : 'PM'}`;
+}
+function dur(min) { min = Math.max(0, Math.round(min || 0)); return `${Math.floor(min / 60)}h ${pad(min % 60)}m`; }
+function monthsBackKey(months) {
+  const n = npNow(); let y = n.getUTCFullYear(), m = n.getUTCMonth() + 1 - months;
+  while (m < 1) { m += 12; y--; }
+  const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return `${y}-${pad(m)}-${pad(Math.min(n.getUTCDate(), last))}`;
+}
+
+// Bikram Sambat (same table as the Windows app)
+const BS_ENC = '132321110102223222101011223321101011232321110012132321110102' +
+  '223222101011223321101011232321110012222322011002223222101011' +
+  '223321101011232321110012222322011011223222101011223321101011' +
+  '232321110012222322011011223222101011232321101011232321110102' +
+  '222322101011223222101011232321110011232321110102222322101011' +
+  '223222101011232321110012132321110102223222101011223231101011' +
+  '232321110012132321110102223222101011223321101011232321110012' +
+  '132322011002223222101011223321101011232321110012222322011011' +
+  '223222101011223321101011232321110012222322011011223222101011' +
+  '232321101011232321110012222322101011223222101011232321110011' +
+  '232321110102222322101011223222101011232321110011232321110102' +
+  '223222101011223231101011232321110012132321110102223222101011' +
+  '223321101011232321110012222322010102223222101011223321101011' +
+  '232321110012222322011002223222101011223321101011232321110012' +
+  '222322011011223222101011232321101011232321110012222322101011' +
+  '223222101011232321110011232321110102222322101011223222101011' +
+  '232321110011232321110102223222101011223222101011223221110111' +
+  '232312110111132321110111223222101111123312110111132321110111' +
+  '132321110111223222110111123321110111132321110111223221110111' +
+  '223222101111123321101011232321110111223222010102223222100111' +
+  '232312101011';
+const BS_MONTHS = ['Baishakh', 'Jestha', 'Ashadh', 'Shrawan', 'Bhadra', 'Ashwin', 'Kartik', 'Mangsir', 'Poush', 'Magh', 'Falgun', 'Chaitra'];
+const BS_REF = Date.UTC(1943, 3, 14);
+function bsOf(k, long = false) {
+  let rem = Math.round((parseKey(k).getTime() - BS_REF) / 86400000);
+  if (rem < 0) return '';
+  let y = 2000, idx = 0;
+  const md = (i) => 29 + Number(BS_ENC[i]);
+  for (;;) {
+    let yd = 0; for (let i = 0; i < 12; i++) yd += md(idx + i);
+    if (rem < yd || y >= 2100) break;
+    rem -= yd; y++; idx += 12;
+  }
+  let m = 0;
+  while (m < 11 && rem >= md(idx + m)) { rem -= md(idx + m); m++; }
+  const d = rem + 1;
+  return long ? `${d} ${BS_MONTHS[m]} ${y}` : `${y}-${pad(m + 1)}-${pad(d)}`;
+}
+
+// ------------------------------------------------------------- helpers
+const STATUS = { PRESENT: 'Present', LATE: 'Late', HALF_DAY: 'Half Day', INCOMPLETE: 'No Check-out', ABSENT: 'Absent', HOLIDAY: 'Holiday', WEEKLY_OFF: 'Weekly Off', LEAVE: 'Leave' };
+const WORKING = new Set(['PRESENT', 'LATE', 'HALF_DAY', 'INCOMPLETE']);
+const OFF = new Set(['HOLIDAY', 'WEEKLY_OFF', 'LEAVE']);
+const COLORS = ['#1d4ed8', '#0f766e', '#7c3aed', '#b45309', '#be123c', '#0369a1', '#4d7c0f', '#9d174d'];
+function avatar(e, size = 34) {
+  let h = 0; for (const c of (e.emp_code + e.name)) h = (h * 31 + c.charCodeAt(0)) & 0x7fffffff;
+  const parts = e.name.trim().split(/\s+/).filter(Boolean);
+  const ini = parts.length === 0 ? '?' : parts.length === 1 ? parts[0][0] : parts[0][0] + parts[parts.length - 1][0];
+  return `<div class="avatar" style="background:${COLORS[h % COLORS.length]};width:${size}px;height:${size}px">${esc(ini.toUpperCase())}</div>`;
+}
+function pill(status) { return `<span class="pill p-${esc(status)}">${esc(STATUS[status] || status)}</span>`; }
+function toast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
+}
+function download(name, rows) {
+  const csv = rows.map((r) => r.map((v) => {
+    const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  }).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function randomHex(n) { const b = new Uint8Array(n); crypto.getRandomValues(b); return [...b].map((x) => x.toString(16).padStart(2, '0')).join(''); }
+function newSalt() {
+  const b = new Uint8Array(16); crypto.getRandomValues(b);
+  return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_');
+}
+async function pinHash(pin, salt) {
+  const data = new TextEncoder().encode(`${salt}::${pin.trim()}`);
+  const d = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, '0')).join('');
+}
+function npIsoNow() { return npNow().toISOString().slice(0, 19); }
+
+async function fetchAll(build) {
+  const out = []; const size = 1000;
+  for (let from = 0; ; from += size) {
+    const { data, error } = await build().range(from, from + size - 1);
+    if (error) throw error;
+    out.push(...data);
+    if (data.length < size) break;
+  }
+  return out;
+}
+
+// ------------------------------------------------------------- state
+const S = { branch: null, employees: [], tab: 'today', sel: null, range: null, period: 'thisMonth', search: '', newestFirst: false };
+
+function setPeriod(p) {
+  const t = todayKey();
+  S.period = p;
+  if (p === 'thisMonth') S.range = [t.slice(0, 8) + '01', t];
+  else if (p === 'lastMonth') {
+    const d = parseKey(t.slice(0, 8) + '01'); d.setUTCDate(0);
+    const last = keyOf(d); S.range = [last.slice(0, 8) + '01', last];
+  } else if (p === 'twoMonths') S.range = [monthsBackKey(2), t];
+  else if (p === 'today') S.range = [t, t];
+}
+setPeriod('thisMonth');
+
+async function loadEmployees() {
+  const { data, error } = await sb.from('employees').select('*').order('name');
+  if (error) throw error;
+  S.employees = data.sort((a, b) => (b.active - a.active) || a.name.localeCompare(b.name));
+}
+async function loadAttendance(from, to, employeeId) {
+  const rows = await fetchAll(() => {
+    let q = sb.from('attendance').select('*').gte('work_date', from).lte('work_date', to).order('work_date');
+    if (employeeId) q = q.eq('employee_id', employeeId);
+    return q;
+  });
+  const sessions = await fetchAll(() => sb.from('attendance_sessions')
+    .select('attendance_id,seq,check_in,check_out,minutes')
+    .gte('check_in', from).lte('check_in', addDays(to, 1) + 'T23:59:59').order('seq'));
+  const byAtt = new Map();
+  for (const s of sessions) { if (!byAtt.has(s.attendance_id)) byAtt.set(s.attendance_id, []); byAtt.get(s.attendance_id).push(s); }
+  for (const r of rows) r._s = (byAtt.get(r.id) || []).sort((a, b) => a.seq - b.seq);
+  return rows;
+}
+const empById = (id) => S.employees.find((e) => e.id === id);
+
+// ------------------------------------------------------------- login
+async function showLogin() {
+  $('appView').classList.add('hidden'); $('loginView').classList.remove('hidden');
+  const sel = $('branchSel');
+  const { data, error } = await sb.rpc('list_branches');
+  if (error) { sel.innerHTML = '<option value="">Could not load branches</option>'; showErr('loginErr', error.message); return; }
+  if (!data.length) { sel.innerHTML = '<option value="">No branches yet</option>'; return; }
+  const last = store.get('att.branch');
+  sel.innerHTML = data.map((b) => `<option value="${esc(b.id)}" data-email="${esc(b.login_email)}" ${b.id === last ? 'selected' : ''}>${esc(b.name)} (${esc(b.code)})</option>`).join('');
+  $('pw').focus();
+}
+function showErr(id, msg) { const e = $(id); e.textContent = msg; e.classList.toggle('hidden', !msg); }
+
+$('loginBtn').onclick = async () => {
+  const opt = $('branchSel').selectedOptions[0];
+  if (!opt || !opt.value) return showErr('loginErr', 'Choose a branch.');
+  if (!$('pw').value) return showErr('loginErr', 'Enter the password.');
+  $('loginBtn').disabled = true; showErr('loginErr', '');
+  const { error } = await sb.auth.signInWithPassword({ email: opt.dataset.email, password: $('pw').value });
+  $('loginBtn').disabled = false;
+  if (error) return showErr('loginErr', /invalid/i.test(error.message) ? 'Incorrect password.' : error.message);
+  store.set('att.branch', opt.value);
+  $('pw').value = '';
+  await startApp();
+};
+$('pw').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('loginBtn').click(); });
+$('showCreate').onclick = () => { $('loginCard').classList.add('hidden'); $('createCard').classList.remove('hidden'); };
+$('showLogin').onclick = () => { $('createCard').classList.add('hidden'); $('loginCard').classList.remove('hidden'); };
+$('createBtn').onclick = async () => {
+  const name = $('nbName').value.trim(), code = $('nbCode').value.trim(), email = $('nbEmail').value.trim();
+  const pw = $('nbPw').value, key = $('nbKey').value.trim();
+  if (!name) return showErr('createErr', 'Enter the branch name.');
+  if (!/^[A-Za-z0-9_-]{2,12}$/.test(code)) return showErr('createErr', 'Code: 2-12 letters or numbers.');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showErr('createErr', 'Enter a valid email.');
+  if (pw.length < 8 || pw !== $('nbPw2').value) return showErr('createErr', 'Passwords must match and have 8+ characters.');
+  if (!key) return showErr('createErr', 'Enter the setup key.');
+  $('createBtn').disabled = true; showErr('createErr', '');
+  try {
+    let { data, error } = await sb.auth.signUp({ email, password: pw });
+    if (error && /registered/i.test(error.message)) ({ data, error } = await sb.auth.signInWithPassword({ email, password: pw }));
+    if (error) throw error;
+    const r = await sb.rpc('register_branch', { p_setup_key: key, p_code: code, p_name: name });
+    if (r.error) { await sb.auth.signOut(); throw r.error; }
+    store.set('att.branch', r.data);
+    toast('Branch created.');
+    await startApp();
+  } catch (e) { showErr('createErr', e.message || String(e)); }
+  $('createBtn').disabled = false;
+};
+
+$('logoutBtn').onclick = async () => { await sb.auth.signOut(); S.branch = null; showLogin(); };
+$('refreshBtn').onclick = async () => { await loadEmployees(); render(); };
+
+async function startApp() {
+  const { data, error } = await sb.from('branches').select('id,code,name').limit(1);
+  if (error || !data.length) { await sb.auth.signOut(); showLogin(); showErr('loginErr', 'This login is not linked to a branch.'); return; }
+  S.branch = data[0];
+  $('branchName').textContent = `${S.branch.name} (${S.branch.code})`;
+  document.title = `${S.branch.name} - Attendance Admin`;
+  $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
+  try { await loadEmployees(); } catch (e) { toast(e.message); }
+  S.sel = S.employees.find((e) => e.active)?.id || S.employees[0]?.id || null;
+  render();
+}
+
+document.querySelectorAll('#tabs button').forEach((b) => b.onclick = () => {
+  document.querySelectorAll('#tabs button').forEach((x) => x.classList.toggle('on', x === b));
+  S.tab = b.dataset.tab;
+  if (S.tab === 'records' || S.tab === 'summary' || S.tab === 'staffatt') { if (S.period === 'today') setPeriod('thisMonth'); }
+  render();
+});
+
+sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT' && S.branch) { S.branch = null; showLogin(); } });
+
+// ------------------------------------------------------------- views
+const main = $('main');
+function render() {
+  const fn = { today: viewToday, staffatt: viewStaffAtt, records: viewRecords, summary: viewSummary, staff: viewStaff, settings: viewSettings }[S.tab];
+  main.innerHTML = '<div class="loading">Loading...</div>';
+  fn().catch((e) => { main.innerHTML = `<div class="error">${esc(e.message || e)}</div>`; if (/JWT|auth/i.test(e.message || '')) showLogin(); });
+}
+
+function periodBar(extra = '') {
+  const b = (k, l) => `<button data-p="${k}" class="${S.period === k ? 'on' : ''}">${l}</button>`;
+  return `<div class="toolbar">
+    <div class="seg" id="seg">${b('thisMonth', 'This month')}${b('lastMonth', 'Last month')}${b('twoMonths', '2 months')}</div>
+    <label class="field">From<input type="date" id="fromD" value="${S.range[0]}"></label>
+    <label class="field">To<input type="date" id="toD" value="${S.range[1]}"></label>
+    ${extra}
+  </div>`;
+}
+function bindPeriod() {
+  $('seg').querySelectorAll('button').forEach((b) => b.onclick = () => { setPeriod(b.dataset.p); render(); });
+  const upd = () => { if ($('fromD').value && $('toD').value) { S.range = [$('fromD').value, $('toD').value]; S.period = 'custom'; render(); } };
+  $('fromD').onchange = upd; $('toD').onchange = upd;
+}
+
+function timesCell(r, key, cls) {
+  const list = r._s.length ? r._s.map((s) => s[key]) : (r[key] ? [r[key]] : []);
+  if (!list.length) return '<span class="dash">-</span>';
+  return list.map((v, i) => `<div class="${v ? cls : 'dash'}">${list.length > 1 ? (i + 1) + '. ' : ''}${t12(v)}</div>`).join('');
+}
+function breakCell(r) {
+  return r.sessions >= 2 ? `<span class="pill p-break">Break duty</span><div class="small">Break ${dur(r.break_minutes)}</div>` : '<span class="dash">-</span>';
+}
+function dateCell(k) {
+  const d = parseKey(k);
+  return `<div class="d">${prettyKey(k)}</div><div class="bs">${WD[d.getUTCDay()]} &middot; ${bsOf(k)} BS</div>`;
+}
+function statusCell(r) {
+  let h = pill(r.status);
+  if (r.late_minutes > 0) h += `<div class="small" style="color:var(--amber)">Late ${dur(r.late_minutes)}</div>`;
+  if (r.note && r.note !== 'Auto-marked') h += `<div class="small muted">${esc(r.note)}</div>`;
+  return h;
+}
+function totals(rows) {
+  const t = { worked: 0, ot: 0, breakDays: 0, breakMin: 0, days: 0, late: 0, absent: 0, off: 0, half: 0 };
+  for (const r of rows) {
+    t.worked += r.worked_minutes; t.ot += r.overtime_minutes;
+    if (r.sessions >= 2) { t.breakDays++; t.breakMin += r.break_minutes; }
+    if (WORKING.has(r.status)) t.days++;
+    if (r.late_minutes > 0) t.late++;
+    if (r.status === 'ABSENT') t.absent++;
+    if (r.status === 'HALF_DAY') t.half++;
+    if (OFF.has(r.status)) t.off++;
+  }
+  return t;
+}
+function tiles(t) {
+  const x = (v, k, c) => `<div class="tile"><div class="v ${c}">${v}</div><div class="k">${k}</div></div>`;
+  return `<div class="tiles">${x(t.days, 'Days worked', 'green')}${x(dur(t.worked), 'Total hours', 'blue')}${x(dur(t.ot), 'Overtime', 'orange')}${x(t.breakDays, 'Break-duty days', 'purple')}${x(dur(t.breakMin), 'Break time', 'purple')}${x(t.late, 'Late days', 'amber')}${x(t.absent, 'Absent', 'red')}${x(t.off, 'Off / leave', '')}</div>`;
+}
+function csvRows(rows, withName) {
+  const head = ['Date (AD)', 'Date (BS)', 'Day', ...(withName ? ['Staff ID', 'Name'] : []), 'Check In(s)', 'Check Out(s)', 'Break Duty', 'Break Time', 'Worked', 'Worked (hours)', 'Overtime', 'Late (min)', 'Status', 'Note'];
+  const out = [head];
+  for (const r of rows) {
+    const e = empById(r.employee_id) || { emp_code: '', name: '(removed)' };
+    const ins = r._s.length ? r._s.map((s) => t12(s.check_in)).join(' | ') : (r.check_in ? t12(r.check_in) : '');
+    const outs = r._s.length ? r._s.map((s) => t12(s.check_out)).join(' | ') : (r.check_out ? t12(r.check_out) : '');
+    out.push([r.work_date, bsOf(r.work_date), WDL[parseKey(r.work_date).getUTCDay()], ...(withName ? [e.emp_code, e.name] : []), ins, outs,
+      r.sessions >= 2 ? `Yes (${r.sessions} sessions)` : 'No', r.sessions >= 2 ? dur(r.break_minutes) : '',
+      dur(r.worked_minutes), (r.worked_minutes / 60).toFixed(2), dur(r.overtime_minutes), r.late_minutes, STATUS[r.status] || r.status, r.note]);
+  }
+  return out;
+}
+
+// ---- Today
+async function viewToday() {
+  const t = todayKey();
+  const rows = await loadAttendance(addDays(t, -1), t);
+  const active = S.employees.filter((e) => e.active);
+  const state = new Map();
+  for (const r of rows) {
+    const open = r._s.find((s) => s.check_in && !s.check_out);
+    if (r.work_date !== t && !open) continue;
+    const last = r._s[r._s.length - 1];
+    state.set(r.employee_id, { r, open, last });
+  }
+  let inNow = 0, done = 0, notIn = 0, ot = 0, worked = 0;
+  const cards = active.map((e) => {
+    const st = state.get(e.id);
+    let badge;
+    if (st?.open) { inNow++; badge = `<span class="pill p-in">IN since ${t12(st.open.check_in)}</span>`; }
+    else if (st && st.r.check_in) { done++; badge = `<span class="pill p-WEEKLY_OFF">Out at ${t12(st.last?.check_out || st.r.check_out)}</span>`; }
+    else if (st) { badge = pill(st.r.status); }
+    else { notIn++; badge = '<span class="pill p-WEEKLY_OFF">Not in yet</span>'; }
+    if (st) { ot += st.r.overtime_minutes; worked += st.r.worked_minutes; }
+    const sessions = st?.r._s.length ? `<div class="small muted">${st.r._s.map((s) => `${t12(s.check_in)} &rarr; ${t12(s.check_out)}`).join('<br>')}</div>` : '';
+    return `<div class="card pcard ${st?.open ? 'in' : ''}">
+      <div style="display:flex;gap:10px;align-items:center">${avatar(e, 40)}<div style="min-width:0"><div style="font-weight:800">${esc(e.name)}</div><div class="small muted">${esc(e.emp_code)}${e.designation ? ' &middot; ' + esc(e.designation) : ''}</div></div></div>
+      <div>${badge} ${st?.r.sessions >= 2 ? '<span class="pill p-break">Break duty</span>' : ''}</div>${sessions}
+    </div>`;
+  }).join('');
+  const x = (v, k, c) => `<div class="tile"><div class="v ${c}">${v}</div><div class="k">${k}</div></div>`;
+  main.innerHTML = `<div style="margin-bottom:14px"><h2>${WDL[parseKey(t).getUTCDay()]}, ${prettyKey(t)}</h2><div class="muted">${bsOf(t, true)} BS &middot; Nepal time</div></div>
+    <div class="tiles">${x(active.length, 'Active staff', '')}${x(inNow, 'Checked in now', 'green')}${x(done, 'Checked out', 'blue')}${x(notIn, 'Not in yet', 'red')}${x(dur(worked), 'Hours today', 'blue')}${x(dur(ot), 'Overtime today', 'orange')}</div>
+    ${active.length ? `<div class="grid-cards">${cards}</div>` : '<div class="card empty">No staff yet. Add them in the Staff tab or in the Windows app.</div>'}`;
+}
+
+// ---- Staff attendance
+async function viewStaffAtt() {
+  const q = S.search.toLowerCase();
+  const list = S.employees;
+  const hide = (p) => q && !(p.name.toLowerCase().includes(q) || p.emp_code.toLowerCase().includes(q));
+  const e = empById(S.sel);
+  const rows = e ? await loadAttendance(S.range[0], S.range[1], e.id) : [];
+  if (S.newestFirst) rows.reverse();
+  const people = list.map((p) => `<div class="person ${p.id === S.sel ? 'on' : ''} ${p.active ? '' : 'off'} ${hide(p) ? 'hidden' : ''}" data-id="${esc(p.id)}">${avatar(p)}<div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="cd">${esc(p.emp_code)}${p.active ? '' : ' &middot; inactive'}</div></div></div>`).join('');
+  main.innerHTML = `${periodBar(`<button class="btn" id="sortBtn">${S.newestFirst ? 'Newest first' : 'Oldest first'}</button><button class="btn" id="csvBtn">Export CSV</button>`)}
+  <div class="twocol">
+    <div class="card stafflist"><div class="search"><input id="q" placeholder="Search staff" value="${esc(S.search)}"></div>${people || '<div class="empty">No staff</div>'}</div>
+    <div>${e ? `
+      <div class="card" style="padding:14px;display:flex;gap:12px;align-items:center;margin-bottom:12px">${avatar(e, 48)}<div><h2 style="font-size:18px">${esc(e.name)}</h2>
+      <div class="small muted">${[e.emp_code, e.designation, e.department, e.flexible_shift ? 'Flexible hours' : `Shift ${e.shift_start}-${e.shift_end}`].filter(Boolean).map(esc).join(' &middot; ')}</div></div></div>
+      ${tiles(totals(rows))}
+      <div class="card tablewrap"><table><thead><tr><th>Date</th><th>Check in</th><th>Check out</th><th>Break duty</th><th>Worked</th><th>OT</th><th>Status</th></tr></thead><tbody>
+      ${rows.map((r) => `<tr class="${OFF.has(r.status) ? 'off' : ''}"><td>${dateCell(r.work_date)}</td><td>${timesCell(r, 'check_in', 't-in')}</td><td>${timesCell(r, 'check_out', 't-out')}</td><td>${breakCell(r)}</td><td>${r.worked_minutes ? dur(r.worked_minutes) : '<span class="dash">-</span>'}</td><td>${r.overtime_minutes ? `<span class="ot">${dur(r.overtime_minutes)}</span>` : '<span class="dash">-</span>'}</td><td>${statusCell(r)}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">No attendance in this period.</td></tr>'}
+      </tbody></table></div>` : '<div class="card empty">Choose a staff member.</div>'}
+    </div>
+  </div>`;
+  bindPeriod();
+  $('q').oninput = (ev) => {
+    S.search = ev.target.value; const qq = S.search.toLowerCase();
+    main.querySelectorAll('.person').forEach((d) => {
+      const p = empById(d.dataset.id);
+      d.classList.toggle('hidden', !!qq && !(p.name.toLowerCase().includes(qq) || p.emp_code.toLowerCase().includes(qq)));
+    });
+  };
+  main.querySelectorAll('.person').forEach((d) => d.onclick = () => { S.sel = d.dataset.id; render(); });
+  $('sortBtn').onclick = () => { S.newestFirst = !S.newestFirst; render(); };
+  $('csvBtn').onclick = () => { if (!e) return; download(`${e.emp_code}_${S.range[0]}_${S.range[1]}.csv`, [['Staff', `${e.name} (${e.emp_code})`], ['Period', `${S.range[0]} to ${S.range[1]}`], [], ...csvRows(rows, false)]); };
+}
+
+// ---- All records
+let recFilter = { emp: '', status: '', breakOnly: false };
+async function viewRecords() {
+  let rows = await loadAttendance(S.range[0], S.range[1], recFilter.emp || null);
+  if (recFilter.status) rows = rows.filter((r) => r.status === recFilter.status);
+  if (recFilter.breakOnly) rows = rows.filter((r) => r.sessions >= 2);
+  rows.sort((a, b) => b.work_date.localeCompare(a.work_date) || (empById(a.employee_id)?.name || '').localeCompare(empById(b.employee_id)?.name || ''));
+  const empOpts = S.employees.map((e) => `<option value="${esc(e.id)}" ${recFilter.emp === e.id ? 'selected' : ''}>${esc(e.name)} (${esc(e.emp_code)})</option>`).join('');
+  const stOpts = Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${recFilter.status === k ? 'selected' : ''}>${v}</option>`).join('');
+  main.innerHTML = `${periodBar(`<label class="field">Staff<select id="fEmp"><option value="">Everyone</option>${empOpts}</select></label>
+    <label class="field">Status<select id="fSt"><option value="">Any</option>${stOpts}</select></label>
+    <label class="check" style="min-height:42px"><input type="checkbox" id="fBr" ${recFilter.breakOnly ? 'checked' : ''}> Break days only</label>
+    <button class="btn" id="csvBtn">Export CSV</button>`)}
+    ${tiles(totals(rows))}
+    <div class="card tablewrap"><table><thead><tr><th>Date</th><th>Staff</th><th>Check in</th><th>Check out</th><th>Break duty</th><th>Worked</th><th>OT</th><th>Status</th></tr></thead><tbody>
+    ${rows.map((r) => { const e = empById(r.employee_id) || { name: '(removed)', emp_code: '' }; return `<tr class="${OFF.has(r.status) ? 'off' : ''}"><td>${dateCell(r.work_date)}</td><td><div style="font-weight:700">${esc(e.name)}</div><div class="small muted">${esc(e.emp_code)}</div></td><td>${timesCell(r, 'check_in', 't-in')}</td><td>${timesCell(r, 'check_out', 't-out')}</td><td>${breakCell(r)}</td><td>${r.worked_minutes ? dur(r.worked_minutes) : '<span class="dash">-</span>'}</td><td>${r.overtime_minutes ? `<span class="ot">${dur(r.overtime_minutes)}</span>` : '<span class="dash">-</span>'}</td><td>${statusCell(r)}</td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">No records for this filter.</td></tr>'}
+    </tbody></table></div>`;
+  bindPeriod();
+  $('fEmp').onchange = (ev) => { recFilter.emp = ev.target.value; render(); };
+  $('fSt').onchange = (ev) => { recFilter.status = ev.target.value; render(); };
+  $('fBr').onchange = (ev) => { recFilter.breakOnly = ev.target.checked; render(); };
+  $('csvBtn').onclick = () => download(`attendance_${S.branch.code}_${S.range[0]}_${S.range[1]}.csv`, csvRows(rows, true));
+}
+
+// ---- Summary
+async function viewSummary() {
+  const rows = await loadAttendance(S.range[0], S.range[1]);
+  const by = new Map();
+  for (const r of rows) { if (!by.has(r.employee_id)) by.set(r.employee_id, []); by.get(r.employee_id).push(r); }
+  const list = S.employees.filter((e) => e.active || by.has(e.id)).map((e) => ({ e, t: totals(by.get(e.id) || []) }));
+  main.innerHTML = `${periodBar('<button class="btn" id="csvBtn">Export CSV</button>')}
+    <div class="card tablewrap"><table><thead><tr><th>Staff</th><th>Days worked</th><th>Half days</th><th>Late</th><th>Absent</th><th>Off / leave</th><th>Break-duty days</th><th>Break time</th><th>Total hours</th><th>Overtime</th></tr></thead><tbody>
+    ${list.map(({ e, t }) => `<tr><td><div style="display:flex;gap:8px;align-items:center">${avatar(e, 28)}<div><div style="font-weight:700">${esc(e.name)}</div><div class="small muted">${esc(e.emp_code)}</div></div></div></td><td>${t.days}</td><td>${t.half}</td><td>${t.late}</td><td>${t.absent}</td><td>${t.off}</td><td>${t.breakDays}</td><td>${dur(t.breakMin)}</td><td><b>${dur(t.worked)}</b></td><td>${t.ot ? `<span class="ot">${dur(t.ot)}</span>` : '<span class="dash">-</span>'}</td></tr>`).join('') || '<tr><td colspan="10" class="empty">No staff.</td></tr>'}
+    </tbody></table></div>`;
+  bindPeriod();
+  $('csvBtn').onclick = () => download(`summary_${S.branch.code}_${S.range[0]}_${S.range[1]}.csv`, [
+    ['Branch', S.branch.name], ['Period', `${S.range[0]} to ${S.range[1]}`], [],
+    ['Staff ID', 'Name', 'Days worked', 'Half days', 'Late', 'Absent', 'Off/leave', 'Break-duty days', 'Break time', 'Total hours', 'Total hours (decimal)', 'Overtime', 'Overtime (decimal)'],
+    ...list.map(({ e, t }) => [e.emp_code, e.name, t.days, t.half, t.late, t.absent, t.off, t.breakDays, dur(t.breakMin), dur(t.worked), (t.worked / 60).toFixed(2), dur(t.ot), (t.ot / 60).toFixed(2)]),
+  ]);
+}
+
+// ---- Staff management
+async function viewStaff() {
+  await loadEmployees();
+  main.innerHTML = `<div class="toolbar"><div class="grow"><h2>Staff</h2><div class="muted small">${S.employees.filter((e) => e.active).length} active &middot; changes reach the branch PCs within a minute</div></div><button class="btn primary" id="addBtn">Add staff</button></div>
+  <div class="card tablewrap"><table><thead><tr><th>Name</th><th>ID</th><th>Department</th><th>Hours</th><th>Weekly off</th><th>Status</th><th></th></tr></thead><tbody>
+  ${S.employees.map((e) => `<tr><td><div style="display:flex;gap:8px;align-items:center">${avatar(e, 28)}<b>${esc(e.name)}</b></div></td><td>${esc(e.emp_code)}</td><td>${esc([e.department, e.designation].filter(Boolean).join(' / '))}</td><td>${e.flexible_shift ? 'Flexible' : esc(`${e.shift_start}-${e.shift_end}`)}</td><td>${e.weekly_off ? WDL[e.weekly_off % 7] : 'None'}</td><td>${e.active ? '<span class="pill p-PRESENT">Active</span>' : '<span class="pill p-WEEKLY_OFF">Inactive</span>'}</td>
+  <td style="white-space:nowrap"><button class="btn" data-edit="${esc(e.id)}">Edit</button> <button class="btn danger" data-del="${esc(e.id)}">Delete</button></td></tr>`).join('') || '<tr><td colspan="7" class="empty">No staff yet.</td></tr>'}
+  </tbody></table></div>`;
+  $('addBtn').onclick = () => openStaff(null);
+  main.querySelectorAll('[data-edit]').forEach((b) => b.onclick = () => openStaff(empById(b.dataset.edit)));
+  main.querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => {
+    const e = empById(b.dataset.del);
+    if (!confirm(`Delete ${e.name}? All of their attendance records are deleted too (on every PC of the branch).`)) return;
+    const { error } = await sb.from('employees').delete().eq('id', e.id);
+    if (error) return toast(error.message);
+    toast('Deleted.'); render();
+  });
+}
+let editing = null;
+function openStaff(e) {
+  editing = e;
+  const f = $('staffForm');
+  $('staffDlgTitle').textContent = e ? `Edit ${e.name}` : 'Add staff';
+  $('pinLabel').textContent = e ? 'New PIN (leave empty to keep)' : 'PIN (4-8 digits)';
+  const v = e || { name: '', emp_code: '', department: '', designation: '', phone: '', joined_date: todayKey(), weekly_off: 0, shift_start: '10:00', shift_end: '19:00', flexible_shift: 1, grace_minutes: 10, active: 1 };
+  for (const k of ['name', 'emp_code', 'department', 'designation', 'phone', 'joined_date', 'shift_start', 'shift_end', 'grace_minutes']) f.elements[k].value = v[k] ?? '';
+  f.elements.weekly_off.value = String(v.weekly_off || 0);
+  f.elements.flexible_shift.checked = !!v.flexible_shift;
+  f.elements.active.checked = !!v.active;
+  f.elements.pin.value = '';
+  f.elements.pin.required = !e;
+  showErr('staffErr', '');
+  $('staffDlg').showModal();
+}
+$('staffSave').onclick = async (ev) => {
+  ev.preventDefault();
+  const f = $('staffForm');
+  const val = (k) => f.elements[k].value.trim();
+  if (!val('name') || !val('emp_code')) return showErr('staffErr', 'Name and ID are required.');
+  const pin = val('pin');
+  if ((!editing || pin) && !/^[0-9]{4,8}$/.test(pin)) return showErr('staffErr', 'PIN must be 4-8 digits.');
+  const dup = S.employees.find((x) => x.emp_code.toLowerCase() === val('emp_code').toLowerCase() && x.id !== editing?.id);
+  if (dup) return showErr('staffErr', `ID ${val('emp_code')} is already used by ${dup.name}.`);
+  const row = {
+    name: val('name'), emp_code: val('emp_code'), department: val('department'), designation: val('designation'), phone: val('phone'),
+    joined_date: val('joined_date'), weekly_off: Number(val('weekly_off')), shift_start: val('shift_start') || '10:00', shift_end: val('shift_end') || '19:00',
+    flexible_shift: f.elements.flexible_shift.checked ? 1 : 0, grace_minutes: Number(val('grace_minutes') || 10), active: f.elements.active.checked ? 1 : 0,
+  };
+  if (pin) { row.pin_salt = newSalt(); row.pin_hash = await pinHash(pin, row.pin_salt); }
+  $('staffSave').disabled = true;
+  let error;
+  if (editing) ({ error } = await sb.from('employees').update(row).eq('id', editing.id));
+  else ({ error } = await sb.from('employees').insert({ ...row, id: randomHex(16), branch_id: S.branch.id, created_at: npIsoNow(), photo_path: '', is_admin: 0 }));
+  $('staffSave').disabled = false;
+  if (error) return showErr('staffErr', error.message);
+  $('staffDlg').close();
+  toast(editing ? 'Saved.' : 'Staff added.');
+  render();
+};
+
+// ---- Settings
+const RULES = [
+  ['company_name', 'Company name', 'text'],
+  ['ot_after_hours', 'Overtime after (hours per day)', 'number'],
+  ['full_day_hours', 'Full day (hours)', 'number'],
+  ['half_day_hours', 'Half day below (hours)', 'number'],
+  ['day_cutoff_hour', 'Night-shift cutoff hour (0-12)', 'number'],
+  ['min_punch_gap_minutes', 'Min gap between punches (minutes)', 'number'],
+  ['default_shift_start', 'Default shift start', 'time'],
+  ['default_shift_end', 'Default shift end', 'time'],
+  ['default_grace', 'Default late grace (minutes)', 'number'],
+];
+async function viewSettings() {
+  const [{ data: bs }, { data: hol }] = await Promise.all([
+    sb.from('branch_settings').select('data').maybeSingle(),
+    sb.from('holidays').select('*').order('date'),
+  ]);
+  const d = bs?.data || {};
+  main.innerHTML = `
+  <div class="card section"><h3>Branch rules</h3><p class="muted small" style="margin-top:-6px">Used by every PC of ${esc(S.branch.name)}. PCs pick up changes on their next sync (within a minute).</p>
+    <div class="row3">${RULES.map(([k, l, t]) => `<label class="field">${l}<input data-rule="${k}" type="${t}" value="${esc(d[k] ?? '')}" ${t === 'number' ? 'step="any"' : ''}></label>`).join('')}</div>
+    <label class="check" style="margin-top:10px"><input type="checkbox" id="noPhoto" ${d.allow_attendance_without_photo === '1' ? 'checked' : ''}> Allow attendance if the camera fails</label>
+    <div class="actions"><button class="btn primary" id="saveRules">Save rules</button></div></div>
+  <div class="card section"><h3>Holidays</h3>
+    <div class="toolbar"><label class="field">Date<input type="date" id="hDate"></label><label class="field grow">Title<input id="hTitle" placeholder="Dashain"></label><button class="btn primary" id="hAdd">Add holiday</button></div>
+    <div class="tablewrap"><table><thead><tr><th>Date</th><th>Title</th><th></th></tr></thead><tbody>
+    ${(hol || []).map((h) => `<tr><td>${dateCell(h.date)}</td><td>${esc(h.title)}</td><td><button class="btn danger" data-hdel="${esc(h.id)}">Remove</button></td></tr>`).join('') || '<tr><td colspan="3" class="muted">No holidays.</td></tr>'}
+    </tbody></table></div></div>
+  <div class="card section"><h3>Branch password</h3><p class="muted small" style="margin-top:-6px">Used here and on the admin login of every PC in this branch.</p>
+    <div class="row3"><label class="field">New password<input type="password" id="np1" autocomplete="new-password"></label><label class="field">Repeat<input type="password" id="np2" autocomplete="new-password"></label></div>
+    <div id="pwMsg" class="hidden"></div>
+    <div class="actions"><button class="btn primary" id="savePw">Change password</button></div></div>
+  <div class="card section"><h3>Data kept</h3><p class="muted" style="margin:0">Attendance older than 2 months (before ${prettyKey(monthsBackKey(2))}) is deleted automatically every night, in the cloud and on each PC. Photos are never uploaded; they stay on the branch PC.</p></div>`;
+  $('saveRules').onclick = async () => {
+    const data = { ...d };
+    main.querySelectorAll('[data-rule]').forEach((i) => { if (i.value !== '') data[i.dataset.rule] = i.value; });
+    data.allow_attendance_without_photo = $('noPhoto').checked ? '1' : '0';
+    const { error } = await sb.from('branch_settings').upsert({ branch_id: S.branch.id, data }, { onConflict: 'branch_id' });
+    toast(error ? error.message : 'Rules saved.');
+  };
+  $('hAdd').onclick = async () => {
+    const date = $('hDate').value, title = $('hTitle').value.trim() || 'Holiday';
+    if (!date) return toast('Pick a date.');
+    const { error } = await sb.from('holidays').upsert({ id: 'hol_' + date, branch_id: S.branch.id, date, title }, { onConflict: 'id' });
+    if (error) return toast(error.message);
+    toast('Holiday added.'); render();
+  };
+  main.querySelectorAll('[data-hdel]').forEach((b) => b.onclick = async () => {
+    const { error } = await sb.from('holidays').delete().eq('id', b.dataset.hdel);
+    if (error) return toast(error.message);
+    render();
+  });
+  $('savePw').onclick = async () => {
+    const a = $('np1').value, b = $('np2').value, m = $('pwMsg');
+    if (a.length < 8 || a !== b) { m.className = 'error'; m.textContent = 'Passwords must match and have 8+ characters.'; return; }
+    const { error } = await sb.auth.updateUser({ password: a });
+    m.className = error ? 'error' : 'ok';
+    m.textContent = error ? error.message : 'Password changed. Use the new password on the branch PCs too.';
+    if (!error) { $('np1').value = ''; $('np2').value = ''; }
+  };
+}
+
+// ------------------------------------------------------------- boot
+const { data: { session } } = await sb.auth.getSession();
+if (session) startApp(); else showLogin();
+</script>
+</body>
+</html>
